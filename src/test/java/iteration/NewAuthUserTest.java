@@ -1,77 +1,56 @@
 package iteration;
 
 
-import io.restassured.RestAssured;
-import static io.restassured.RestAssured.given;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import java.util.List;
-import org.apache.http.HttpStatus;
+import generatedata.GenerateData;
+import models.LoginUserRequest;
+import models.UserRequest;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import requests.AdminCreateUserRequest;
+import requests.AdminLoginUserRequest;
+import specifications.RequestSpec;
+import specifications.ResponseSpec;
 
 public class NewAuthUserTest {
-  @BeforeAll
-  public static void setupRestAssured() {  // Добавлено static
-    RestAssured.filters(
-        List.of(
-            new RequestLoggingFilter(),
-            new ResponseLoggingFilter()
-        )
-    );
-  }
-
   @Test
   public void adminCanGenerateAuthTokenTest() {
-    given()
-        .contentType(ContentType.JSON)
-        .accept(ContentType.JSON)
-        .body("""
-            {
-              "username" : "admin",
-              "password" : "admin"
-            }
-            """)
-        .post("http://localhost:4111/api/v1/auth/login")
-        .then()
-        .assertThat()
-        .statusCode(HttpStatus.SC_OK)
-        .header("authorization", "Basic YWRtaW46YWRtaW4=");
+    LoginUserRequest userRequest = LoginUserRequest.builder()
+        .username("admin")
+        .password("admin")
+        .build();
+
+    new AdminLoginUserRequest(
+        RequestSpec.unAuthSpec(),
+        ResponseSpec.requestWasOk()
+    )
+        .post(userRequest);
   }
 
   @Test
   public void userCanGenerateAuthTokenTest() {
-    given()
-        .contentType(ContentType.JSON)
-        .accept(ContentType.JSON)
-        .header("authorization", "Basic YWRtaW46YWRtaW4=")
-        .body("""
-            {
-            "username": "Nikita20",
-            "password": "Nikita20!",
-            "role": "USER"
-            }
-            """)
-        .post("http://localhost:4111/api/v1/admin/users")
-        .then()
-        .assertThat()
-        .statusCode(HttpStatus.SC_CREATED);
+    UserRequest userRequest = UserRequest.builder()
+        .username(GenerateData.getUserName())
+        .password(GenerateData.getPassword())
+        .role("USER")
+        .build();
 
-    given()
-        .contentType(ContentType.JSON)
-        .accept(ContentType.JSON)
-        .body("""
-            {
-              "username" : "Nikita20",
-              "password" : "Nikita20!"
-            }
-            """)
-        .post("http://localhost:4111/api/v1/auth/login")
-        .then()
+    new AdminCreateUserRequest(
+        RequestSpec.adminSpec(),
+        ResponseSpec.entityWasCreated()
+    )
+        .post(userRequest);
+
+    LoginUserRequest loginUserRequest = LoginUserRequest.builder()
+        .username(userRequest.getUsername())
+        .password(userRequest.getPassword())
+        .build();
+
+    new AdminLoginUserRequest(
+        RequestSpec.loginUserSpec(),
+        ResponseSpec.requestWasOk()
+    )
+        .post(loginUserRequest)
         .assertThat()
-        .statusCode(HttpStatus.SC_OK)
         .header("authorization", Matchers.notNullValue());
   }
 }
