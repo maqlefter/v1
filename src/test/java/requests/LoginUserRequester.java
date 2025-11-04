@@ -6,8 +6,8 @@ import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 import models.LoginUserRequest;
 
-public class AdminLoginUserRequest extends Request<LoginUserRequest> {
-  public AdminLoginUserRequest(
+public class LoginUserRequester extends Request<LoginUserRequest> {
+  public LoginUserRequester(
       RequestSpecification requestSpecification,
       ResponseSpecification responseSpecification
   ) {

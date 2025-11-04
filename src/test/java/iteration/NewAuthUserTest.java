@@ -4,10 +4,11 @@ package iteration;
 import generatedata.GenerateData;
 import models.LoginUserRequest;
 import models.UserRequest;
+import models.UserRole;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import requests.AdminCreateUserRequest;
-import requests.AdminLoginUserRequest;
+import requests.LoginUserRequester;
 import specifications.RequestSpec;
 import specifications.ResponseSpec;
 
@@ -19,7 +20,7 @@ public class NewAuthUserTest {
         .password("admin")
         .build();
 
-    new AdminLoginUserRequest(
+    new LoginUserRequester(
         RequestSpec.unAuthSpec(),
         ResponseSpec.requestWasOk()
     )
@@ -31,7 +32,7 @@ public class NewAuthUserTest {
     UserRequest userRequest = UserRequest.builder()
         .username(GenerateData.getUserName())
         .password(GenerateData.getPassword())
-        .role("USER")
+        .role(UserRole.USER.toString())
         .build();
 
     new AdminCreateUserRequest(
@@ -45,8 +46,8 @@ public class NewAuthUserTest {
         .password(userRequest.getPassword())
         .build();
 
-    new AdminLoginUserRequest(
-        RequestSpec.loginUserSpec(),
+    new LoginUserRequester(
+        RequestSpec.unAuthSpec(),
         ResponseSpec.requestWasOk()
     )
         .post(loginUserRequest)

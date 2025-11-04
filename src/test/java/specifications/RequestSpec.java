@@ -6,6 +6,8 @@ import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import java.util.List;
+import models.LoginUserRequest;
+import requests.LoginUserRequester;
 
 public class RequestSpec {
   private RequestSpec(){}
@@ -29,7 +31,16 @@ public class RequestSpec {
         .build();
   }
 
-  public static RequestSpecification loginUserSpec(){
-    return defaultSpecBuild().build();
+  public static RequestSpecification loginUserSpec(String username, String password){
+    String authToken = new LoginUserRequester(
+        RequestSpec.unAuthSpec(),
+        ResponseSpec.requestWasOk())
+        .post(LoginUserRequest.builder().username(username).password(password).build())
+        .extract()
+        .header("authorization");
+
+    return defaultSpecBuild()
+        .addHeader("authorization", authToken)
+        .build();
   }
 }
